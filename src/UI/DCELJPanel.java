@@ -1,11 +1,12 @@
+package UI;
+
+import DoublyConnectedEdgeList.DCEL;
 import DoublyConnectedEdgeList.HalfEdge;
 import DoublyConnectedEdgeList.Vertex;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -15,7 +16,7 @@ import java.util.Iterator;
 public class DCELJPanel extends JPanel {
 
     private DCEL dcel;
-    private final int size = 700;
+    private final int size = 600;
 
     public DCELJPanel(DCEL dcel) {
 

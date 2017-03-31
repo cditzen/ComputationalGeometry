@@ -1,6 +1,8 @@
-import DoublyConnectedEdgeList.Face;
-import DoublyConnectedEdgeList.HalfEdge;
-import DoublyConnectedEdgeList.Vertex;
+package DoublyConnectedEdgeList;
+
+import Helpers.Helpers;
+import Triangulation.Triangulation;
+import UI.DCELJPanel;
 
 import javax.swing.*;
 import java.util.*;
@@ -12,10 +14,10 @@ public class DCEL {
 
     // List of vertices in the DoublyConnectedEdgeList
     private final HashMap<String, Vertex> vertexMap;
-    ArrayList<HalfEdge> edgeList;
+    private ArrayList<HalfEdge> edgeList;
 
-    ArrayList<Face> faces;
-    Face outerFace;
+    private ArrayList<Face> faces;
+    private Face outerFace;
 
 
     public DCEL() {
@@ -35,11 +37,23 @@ public class DCEL {
         return vertices;
     }
 
+    public Face getOuterFace() {
+        return outerFace;
+    }
+
+    public ArrayList<Face> getFaces() {
+        return faces;
+    }
+
     public void addVertex(String vertexName, Vertex vertex) {
         if (vertexMap.containsKey(vertexName)) {
             throw new DuplicateVertexException();
         }
         vertexMap.put(vertexName, vertex);
+    }
+
+    public void addVertex(Vertex vertex) {
+        addVertex(vertex.getName(), vertex);
     }
 
     public void addEdge(String vertex1, String vertex2) {
@@ -166,7 +180,7 @@ public class DCEL {
             int currentAngle = source.getAngleToVertex(current.getNext().getOrigin());
             int prevAngle = source.getAngleToVertex(prev.getNext().getOrigin());
 
-            if (targetInRange(currentAngle, prevAngle, targetAngle)) {
+            if (Helpers.targetInRange(currentAngle, prevAngle, targetAngle)) {
                 return current;
             } else {
                 // Shift everything down by the lowest point, check and see if still bounded. I coded this at 2am :(
@@ -183,19 +197,13 @@ public class DCEL {
                 if (tempTarget <= -180) {
                     tempTarget += 360;
                 }
-                if (targetInRange(currentAngle, prevAngle, tempTarget)) {
+                if (Helpers.targetInRange(currentAngle, prevAngle, tempTarget)) {
                     return current;
                 }
             }
         }
         System.out.println("Something messed up, this should not get here..." + source.getName() + " " + toFind.getName());
         throw new RuntimeException();
-    }
-
-    private boolean targetInRange(int x, int y, int target) {
-        int max = Math.max(x, y);
-        int min = Math.min(x, y);
-        return target < max && target > min;
     }
 
     /**
@@ -233,7 +241,7 @@ public class DCEL {
             }
 
             // If target is found and path is anticlockwise
-            if (currentEdge.getOrigin() == target && isAntiClockwise(vertexPath)) {
+            if (currentEdge.getOrigin() == target && Helpers.isAntiClockwise(vertexPath)) {
                 return emergentEdge;
             }
         }
@@ -242,39 +250,21 @@ public class DCEL {
         return null;
     }
 
-    /**
-     * Returns true if a list of vertices are listed in anti clockwise order around a polygon
-     * Credit: http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
-     * @param
-     * @return
-     */
-    private boolean isAntiClockwise(ArrayList<Vertex> vertexPath) {
-        int sum = 0;
-        for (int i = 0; i < vertexPath.size() - 1; i++) {
-            sum += ((vertexPath.get(i + 1).getX() - vertexPath.get(i).getX()) *
-                    (vertexPath.get(i + 1).getY() + vertexPath.get(i).getY()));
-        }
-        int leftSide = (vertexPath.get(0).getX() - vertexPath.get(vertexPath.size() - 1).getX());
-        int rightSide = (vertexPath.get(0)).getY() + vertexPath.get(vertexPath.size() - 1).getY();
-
-        sum += leftSide * rightSide;
-        return sum < 0;
-    }
-
     public void constructSimplePolygon(List<Vertex> listOfVertices) {
         // TODO Check if not simple polygon
         if (listOfVertices.size() < 3) {
             throw new NotSimplePolygonException();
         }
 
-        vertexMap.put("V0", listOfVertices.get(0));
+        // Add first vertex
+        addVertex(listOfVertices.get(0));
 
         for (int i = 1; i < listOfVertices.size(); i++) {
-            addVertex("V" + String.valueOf(i), listOfVertices.get(i));
-            addEdge("V" + String.valueOf(i - 1), "V" + String.valueOf(i));
+            addVertex(listOfVertices.get(i));
+            addEdge(listOfVertices.get(i - 1).getName(), listOfVertices.get(i).getName());
         }
 
-        addEdge("V" + String.valueOf(listOfVertices.size() - 1), "V0");
+        addEdge(listOfVertices.get(listOfVertices.size() - 1).getName(), listOfVertices.get(0).getName());
     }
 
     public void printDebug() {
@@ -300,44 +290,111 @@ public class DCEL {
         }
     }
 
+    public ArrayList<DCEL> getSubDivisions() {
+        ArrayList<DCEL> subDivisions = new ArrayList<>();
+
+        for (Face face : this.getFaces()) {
+            System.out.println("Face: " + face.getName());
+            if (face != this.getOuterFace()) {
+                ArrayList<Vertex> verticesInFace = new ArrayList<>();
+                FaceIterator faceIterator = face.getFaceIterator();
+                while (faceIterator.hasNext()) {
+                    Vertex vertex = faceIterator.next();
+                    // Make duplicate Vertex
+                    Vertex copy = new Vertex(vertex.getX(), vertex.getY(), vertex.getName());
+                    verticesInFace.add(copy);
+                    System.out.println("\t\tVertex: " + vertex.getName());
+                }
+                DCEL subDivision = new DCEL();
+                subDivision.constructSimplePolygon(verticesInFace);
+                subDivisions.add(subDivision);
+            }
+        }
+        return subDivisions;
+    }
 
     public static void main(String[] args) {
-        System.out.println("Creating DCEL");
-        DCEL dcel = new DCEL();
+        System.out.println("Creating DoublyConnectedEdgeList.DCEL");
+
+
+        ArrayList<Vertex> zigZagVertices = new ArrayList<>();
+        zigZagVertices.add(new Vertex(100, 150, "V0"));
+        zigZagVertices.add(new Vertex(150, 100, "V1"));
+        zigZagVertices.add(new Vertex(200, 200, "V2"));
+        zigZagVertices.add(new Vertex(250, 150, "V3"));
+        zigZagVertices.add(new Vertex(300, 250, "V4"));
+        zigZagVertices.add(new Vertex(400, 200, "V5"));
+        zigZagVertices.add(new Vertex(450, 300, "V6"));
+        zigZagVertices.add(new Vertex(400, 350, "V7"));
+        zigZagVertices.add(new Vertex(350, 300, "V8"));
+        zigZagVertices.add(new Vertex(300, 350, "V9"));
+        zigZagVertices.add(new Vertex(250, 250, "V10"));
+        zigZagVertices.add(new Vertex(200, 300, "V11"));
+        zigZagVertices.add(new Vertex(150, 200, "V12"));
+        zigZagVertices.add(new Vertex(100, 250, "V13"));
+
+        DCEL zigZag = new DCEL();
+        zigZag.constructSimplePolygon(zigZagVertices);
 
         ArrayList<Vertex> list = new ArrayList<>();
-        list.add(new Vertex(300, 550, "V0"));
-        list.add(new Vertex(270, 484, "V1"));
-        list.add(new Vertex(225, 425, "V2"));
-        list.add(new Vertex(170, 380, "V3"));
-        list.add(new Vertex(100, 350, "V4"));
-        list.add(new Vertex(230, 200, "V5"));
-        list.add(new Vertex(170, 140, "V6"));
-        list.add(new Vertex(300, 100, "V7"));
-        list.add(new Vertex(360, 180, "V8"));
-        list.add(new Vertex(440, 230, "V9"));
-        list.add(new Vertex(455, 240, "V10"));
-        list.add(new Vertex(475, 255, "V11"));
-        list.add(new Vertex(500, 275, "V12"));
-        list.add(new Vertex(250, 280, "V13"));
-        list.add(new Vertex(230, 305, "V14"));
+        list.add(new Vertex(230, 350, "V0"));
+        list.add(new Vertex(150, 290, "V1"));
+        list.add(new Vertex(220, 270, "V2"));
+        list.add(new Vertex(200, 220, "V3"));
+        list.add(new Vertex(100, 250, "V4"));
+        list.add(new Vertex(120, 120, "V5"));
+        list.add(new Vertex(260, 100, "V6"));
+        list.add(new Vertex(280, 230, "V7"));
+        list.add(new Vertex(310, 200, "V8"));
+        list.add(new Vertex(320, 270, "V9"));
+        list.add(new Vertex(300, 270, "V10"));
+        list.add(new Vertex(290, 350, "V11"));
+        list.add(new Vertex(240, 320, "V12"));
 
+        DCEL dcel = new DCEL();
         dcel.constructSimplePolygon(list);
 
-        System.out.println("Before triangulation:");
-        dcel.printDebug();
+        ArrayList<Vertex> yMonotoneVertices = new ArrayList<>();
+        yMonotoneVertices.add(new Vertex(300, 550, "V0"));
+        yMonotoneVertices.add(new Vertex(270, 484, "V1"));
+        yMonotoneVertices.add(new Vertex(225, 425, "V2"));
+        yMonotoneVertices.add(new Vertex(170, 380, "V3"));
+        yMonotoneVertices.add(new Vertex(100, 350, "V4"));
+        yMonotoneVertices.add(new Vertex(230, 200, "V5"));
+        yMonotoneVertices.add(new Vertex(170, 140, "V6"));
+        yMonotoneVertices.add(new Vertex(300, 90, "V7"));
+        yMonotoneVertices.add(new Vertex(380, 150, "V8"));
+        yMonotoneVertices.add(new Vertex(360, 180, "V9"));
+        yMonotoneVertices.add(new Vertex(440, 270, "V10"));
+        yMonotoneVertices.add(new Vertex(455, 245, "V11"));
+        yMonotoneVertices.add(new Vertex(475, 230, "V12"));
+        yMonotoneVertices.add(new Vertex(500, 300, "V13"));
+        yMonotoneVertices.add(new Vertex(270, 290, "V14"));
+        yMonotoneVertices.add(new Vertex(245, 320, "V15"));
+        yMonotoneVertices.add(new Vertex(320, 405, "V16"));
 
-        Triangulation.triangulateMonotonePolygon(dcel);
+        DCEL thirdPolygon = new DCEL();
+        thirdPolygon.constructSimplePolygon(yMonotoneVertices);
 
-        System.out.println("\nAfter triangulation:");
-        dcel.printDebug();
+        Triangulation.makeMonotone(zigZag);
+        Triangulation.makeMonotone(dcel);
+        Triangulation.makeMonotone(thirdPolygon);
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new DCELJPanel(dcel);
-            }
-        });
+        for (DCEL subDivision : zigZag.getSubDivisions()) {
+            Triangulation.triangulateMonotonePolygon(subDivision, zigZag);
+        }
+
+        for (DCEL subDivision : dcel.getSubDivisions()) {
+            Triangulation.triangulateMonotonePolygon(subDivision, dcel);
+        }
+
+        for (DCEL subDivision : thirdPolygon.getSubDivisions()) {
+            Triangulation.triangulateMonotonePolygon(subDivision, thirdPolygon);
+        }
+
+        SwingUtilities.invokeLater(() -> new DCELJPanel(zigZag));
+        SwingUtilities.invokeLater(() -> new DCELJPanel(dcel));
+        SwingUtilities.invokeLater(() -> new DCELJPanel(thirdPolygon));
     }
 
     public final static class DuplicateVertexException extends RuntimeException {}

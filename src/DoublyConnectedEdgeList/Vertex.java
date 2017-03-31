@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 /**
  * Created by Cory Itzen on 3/14/2017.
  */
-public class Vertex {
+public class Vertex implements Comparable<Vertex>, Cartesian {
 
     // X and Y position of this vertex
     private final int x;
@@ -20,14 +20,6 @@ public class Vertex {
     private HalfEdge incidentEdge;
 
     private String name;
-
-
-    public Vertex(int x, int y) {
-        this.x = x;
-        this.y = y;
-        incidentEdge = null;
-        name = "";
-    }
 
     public Vertex(int x, int y, String name) {
         this.x = x;
@@ -83,6 +75,21 @@ public class Vertex {
         return new IncidentEdgeIterator(this);
     }
 
+    /**
+     * Return positive if this has a larger y value
+     * Return negative if this has a smaller y value
+     * Ties are broken by X coordinate
+     * @param o
+     * @return
+     */
+    @Override
+    public int compareTo(Vertex o) {
+        if (this.getY() == o.getY()) {
+            return o.getX() - this.getX();
+        } else {
+            return this.getY() - o.getY();
+        }
+    }
 }
 
 /**

@@ -1,5 +1,7 @@
 package DoublyConnectedEdgeList;
 
+import Helpers.Helpers;
+
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -7,7 +9,7 @@ import java.util.NoSuchElementException;
 /**
  * Created by Cory Itzen on 3/14/2017.
  */
-public class HalfEdge {
+public class HalfEdge implements Comparable<Cartesian>, Cartesian {
 
     // For debugging
     String name;
@@ -16,7 +18,6 @@ public class HalfEdge {
     private Vertex origin;
 
     // Twin halfEdge.
-    // IDEA: Create two edges, and then match them after construction
     private HalfEdge twin;
 
     // Face this halfEdge bounds
@@ -30,10 +31,10 @@ public class HalfEdge {
 
     public HalfEdge(Vertex origin, String name) {
         this.origin = origin;
-        this.twin = null;           // TODO Should be set later
-        this.incidentFace = null;   // TODO Should be set somehow...
-        this.next = null;           // TODO
-        this.prev = null;           // TODO
+        this.twin = null;
+        this.incidentFace = null;
+        this.next = null;
+        this.prev = null;
         this.name = name;
     }
 
@@ -79,6 +80,32 @@ public class HalfEdge {
 
     public PathIterator getPathIterator(Vertex targetVertex) {
         return new PathIterator(this, targetVertex);
+    }
+
+    public int getY() {
+        return this.origin.getY();
+    }
+
+    public int getX() {
+        return this.origin.getX();
+    }
+
+    /**
+     * Return positive if this edge origin has a larger x value than other
+     * Returns positive if this edge lies to the right of the other cartesian
+     * @param o
+     * @return
+     */
+    @Override
+    public int compareTo(Cartesian o) {
+        Vertex endVertex = this.getTwin().getOrigin();
+        if (endVertex.getX() - this.getX() == 0 || o instanceof HalfEdge) {
+            return this.getOrigin().getX() - o.getX();
+        }
+        double slope = ((double) (endVertex.getY() - this.getY()) / (double) (endVertex.getX() - this.getX()));
+        double b = this.getY() - this.getX() * slope;
+        int intersection = (int) ((o.getY() - b) / slope);
+        return intersection - o.getX();
     }
 }
 
