@@ -1,7 +1,5 @@
 package DoublyConnectedEdgeList;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -51,20 +49,12 @@ public class Vertex implements Comparable<Vertex>, Cartesian {
         return y;
     }
 
-    public ArrayList<HalfEdge> getOutgoingEdges() {
+    public int getEndPointX() {
+        return x;
+    }
 
-        ArrayList<HalfEdge> edges = new ArrayList<>();
-
-        if (incidentEdge != null) {
-            HalfEdge start = incidentEdge;
-            edges.add(start);
-            HalfEdge current = start.getTwin().getNext();
-            while (current != start) {
-                edges.add(current);
-                current = current.getTwin().getNext();
-            }
-        }
-        return edges;
+    public int getEndPointY() {
+        return y;
     }
 
     public int getAngleToVertex(Vertex target) {

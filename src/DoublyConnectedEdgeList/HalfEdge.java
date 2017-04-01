@@ -86,13 +86,21 @@ public class HalfEdge implements Comparable<Cartesian>, Cartesian {
         return this.origin.getY();
     }
 
+    public int getEndPointY() {
+        return getTwin().getOrigin().getY();
+    }
+
     public int getX() {
         return this.origin.getX();
     }
 
+    public int getEndPointX() {
+        return getTwin().getOrigin().getX();
+    }
+
     /**
-     * Return positive if this edge origin has a larger x value than other
-     * Returns positive if this edge lies to the right of the other cartesian
+     * Return positive if this edge lies to the right of the other vertex
+     * Returns positive if this edge's midpoint lies to the right of the other midpoint
      * @param o
      * @return
      */
@@ -100,10 +108,17 @@ public class HalfEdge implements Comparable<Cartesian>, Cartesian {
     public int compareTo(Cartesian o) {
         Vertex endVertex = this.getTwin().getOrigin();
         if (endVertex.getX() - this.getX() == 0 || o instanceof HalfEdge) {
-            return this.getOrigin().getX() - o.getX();
+            int xDiff = (this.getX() + this.getEndPointX()) - (o.getX() + o.getEndPointX());
+
+            if (xDiff == 0) {
+                return (this.getY() + this.getEndPointY()) - (o.getY() + o.getEndPointY());
+            } else {
+                return xDiff;
+            }
+
         }
         double slope = ((double) (endVertex.getY() - this.getY()) / (double) (endVertex.getX() - this.getX()));
-        double b = this.getY() - this.getX() * slope;
+        double b = this.getY() - (this.getX() * slope);
         int intersection = (int) ((o.getY() - b) / slope);
         return intersection - o.getX();
     }

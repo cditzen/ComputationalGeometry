@@ -3,6 +3,7 @@ package Helpers;
 import DoublyConnectedEdgeList.Vertex;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -42,15 +43,15 @@ public class Helpers {
         return sum < 0;
     }
 
-    /**
-     * Sorts a list of edges based on Edge Weight
-     * All edges must implement IWeight
-     * @param vertices list of edges to sort
-     * @param
-     */
-    public static void mergeSort(List<Vertex> vertices) {
-        mergeSort(vertices, 0, vertices.size() - 1);
-    }
+//    /**
+//     * Sorts a list of edges based on Edge Weight
+//     * All edges must implement IWeight
+//     * @param vertices list of edges to sort
+//     * @param
+//     */
+//    public static void mergeSort(List<Vertex> vertices) {
+//        mergeSort(vertices, 0, vertices.size() - 1);
+//    }
 
     /**
      * Divides and conquer a list of edges
@@ -90,13 +91,13 @@ public class Helpers {
 
         /** Merge two array subsets based in increasing weight */
         while (leftIndex <= mid && rightIndex <= right) {
-            if (copy[leftIndex].compareTo(copy[rightIndex]) > 0) {
-                vertices.set(index, copy[leftIndex]);
-                leftIndex++;
-            } else {
-                vertices.set(index, copy[rightIndex]);
-                rightIndex++;
-            }
+//            if (copy[leftIndex].compareTo(copy[rightIndex]) > 0) {
+//                vertices.set(index, copy[leftIndex]);
+//                leftIndex++;
+//            } else {
+//                vertices.set(index, copy[rightIndex]);
+//                rightIndex++;
+//            }
             index++;
         }
 
@@ -109,11 +110,13 @@ public class Helpers {
     }
 
     public static boolean vertexAboveNeighbors(Vertex target, Vertex n1, Vertex n2) {
-        return target.compareTo(n1) > 0 && target.compareTo(n2) > 0;
+        Comparator<Vertex> comparator = CartesianComparator.yAxisComparator();
+        return comparator.compare(target, n1) > 0 && comparator.compare(target, n2) > 0;
     }
 
     public static boolean vertexBelowNeighbors(Vertex target, Vertex n1, Vertex n2) {
-        return target.compareTo(n1) < 0 && target.compareTo(n2) < 0;
+        Comparator<Vertex> comparator = CartesianComparator.yAxisComparator();
+        return comparator.compare(target, n1) < 0 && comparator.compare(target, n2) < 0;
     }
 
 }

@@ -4,8 +4,7 @@ import DoublyConnectedEdgeList.DCEL;
 import DoublyConnectedEdgeList.Face;
 import DoublyConnectedEdgeList.HalfEdge;
 import DoublyConnectedEdgeList.Vertex;
-import Helpers.Helpers;
-import Helpers.Treap;
+import Helpers.*;
 
 import java.util.*;
 
@@ -23,7 +22,7 @@ public class Triangulation {
 
         // Sort vertices in decreasing priority
         ArrayList<Vertex> vertices = simplePolygon.getVertices();
-        Helpers.mergeSort(vertices);
+        Collections.sort(vertices, CartesianComparator.yAxisComparator().reversed());
 
         Face outerFace = simplePolygon.getOuterFace();
 
@@ -229,6 +228,3 @@ public class Triangulation {
 
 }
 
-enum Direction {
-    LEFT, RIGHT
-}

@@ -1,20 +1,28 @@
 package Helpers;
 
+import DoublyConnectedEdgeList.HalfEdge;
+
 import java.util.Random;
 
 /**
  * Implements a treap.
  * Note that all "matching" is based on the compareTo method.
- * @author Mark Allen Weiss
  */
 public class Treap <T extends Comparable<? super T>> {
 
+    private TreapNode root;
+    private TreapNode nullNode;
+
     public Treap() {
+        nullNode = new TreapNode(null);
+        nullNode.left = nullNode.right = nullNode;
+        nullNode.priority = Integer.MAX_VALUE;
         root = nullNode;
     }
 
-    public void insert(T x) {
-        root = insert(x, root);
+    public <T extends Comparable> void insert(T x) {
+        TreapNode node = new TreapNode(x, nullNode, nullNode);
+        root = insert(node, root);
     }
 
     public void remove(T x) {
@@ -61,6 +69,27 @@ public class Treap <T extends Comparable<? super T>> {
         }
     }
 
+    public Treap<T> makeCopy() {
+        Treap<T> copy = new Treap<T>();
+        TreapNode copyRoot = new TreapNode(this.root.element, copy.nullNode, copy.nullNode, this.root.priority);
+        copyChildren(this.root, copyRoot, copy.nullNode);
+        copy.root = copyRoot;
+        return copy;
+    }
+
+    private void copyChildren(TreapNode actualNode, TreapNode copyParent, TreapNode copyNullNode) {
+        if (actualNode.left != nullNode) {
+            TreapNode copyLeft = new TreapNode(actualNode.left.element, copyNullNode, copyNullNode, actualNode.priority);
+            copyParent.left = copyLeft;
+            copyChildren(actualNode.left, copyLeft, copyNullNode);
+        }
+        if (actualNode.right != nullNode) {
+            TreapNode copyRight = new TreapNode(actualNode.right.element, copyNullNode, copyNullNode, actualNode.priority);
+            copyParent.right = copyRight;
+            copyChildren(actualNode.right, copyRight, copyNullNode);
+        }
+    }
+
     public void makeEmpty() {
         root = nullNode;
     }
@@ -75,17 +104,23 @@ public class Treap <T extends Comparable<? super T>> {
      * @param t the node that roots the tree.
      * @return the new root.
      */
-    private <T extends Comparable<? super T>> TreapNode insert(Comparable x, TreapNode t) {
+    private <T extends Comparable<? super T>> TreapNode insert(TreapNode x, TreapNode t) {
         if (t == nullNode) {
-            t = new TreapNode(x, nullNode, nullNode);
-        } else if (x.compareTo(t.element) < 0) {
+            t = x;
+        } else if (x.element.compareTo(t.element) < 0) {
             t.left = insert(x, t.left);
-            if (t.left.priority < t.priority)
+
+            if (t.left.priority < t.priority) {
                 t = rotateWithLeftChild(t);
-        } else if (x.compareTo(t.element) > 0 ) {
+            }
+
+        } else if (x.element.compareTo(t.element) > 0) {
             t.right = insert(x, t.right);
-            if (t.right.priority < t.priority)
+
+            if (t.right.priority < t.priority) {
                 t = rotateWithRightChild(t);
+            }
+
         }
         return t;
     }
@@ -126,16 +161,27 @@ public class Treap <T extends Comparable<? super T>> {
         return k2;
     }
 
-    private TreapNode root;
-    private static TreapNode nullNode;
-    static {
-        nullNode = new TreapNode(null);
-        nullNode.left = nullNode.right = nullNode;
-        nullNode.priority = Integer.MAX_VALUE;
+    public void printTree() {
+        printTree(this.root);
     }
 
-    // Test program
+    /**
+     * Internal method to print a subtree in sorted order.
+     * @param t the node that roots the tree.
+     */
+    private void printTree(TreapNode t)
+    {
+        if( t != t.left )
+        {
+            printTree( t.left );
+            System.out.println(  ( (HalfEdge) t.element).getName());
+            printTree( t.right );
+        }
+    }
+
     public static void main(String [ ] args) {
+
+        System.out.println("Making first treap:");
         Treap t = new Treap();
         t.insert(10);
         t.insert(12);
@@ -143,28 +189,58 @@ public class Treap <T extends Comparable<? super T>> {
         t.insert(5);
         t.insert(4);
         t.insert(3);
-        t.remove(5);
+        t.printTree(t.root);
+
+        System.out.println("\n\nMaking copy:");
+        Treap copy = t.makeCopy();
+        copy.printTree();
+
+        System.out.println("\n\nRemoving 12 from original:");
+        t.remove(12);
+        t.printTree();
+
+        System.out.println("\n\nCopy should not be changed:");
+        copy.printTree();
+
+        System.out.println("\n\nRemoving 30 from copy (30 does not exist):");
+        copy.remove(30);
+        copy.printTree();
+
+        System.out.println("\n\nCopy.find(4) (Does exist):");
+        System.out.println();
+
+        System.out.println("\n\nCopy.find(30) (Does not exist):");
+        System.out.println();
+
+        System.out.println("Adding 40 to copy");
+        copy.insert(40);
+        copy.printTree();
     }
 }
 
 class TreapNode
 {
-    // Constructors
+    Comparable element;
+    TreapNode left;
+    TreapNode right;
+    int  priority;
+
     TreapNode(Comparable theElement) {
         this(theElement, null, null);
     }
 
     TreapNode(Comparable theElement, TreapNode lt, TreapNode rt) {
-        element  = theElement;
-        left     = lt;
-        right    = rt;
-        priority = new Random().nextInt();
+        this.element = theElement;
+        this.left = lt;
+        this.right = rt;
+        this.priority = new Random().nextInt();
     }
 
-    // Friendly data; accessible by other package routines
-    Comparable element;      // The data in the node
-    TreapNode  left;         // Left child
-    TreapNode  right;        // Right child
-    int        priority;     // Priority
+    TreapNode(Comparable theElement, TreapNode lt, TreapNode rt, int priority) {
+        this.element = theElement;
+        this.left = lt;
+        this.right = rt;
+        this.priority = priority;
+    }
 
 }

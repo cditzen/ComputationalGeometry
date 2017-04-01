@@ -1,6 +1,7 @@
 package DoublyConnectedEdgeList;
 
 import Helpers.Helpers;
+import PointLocation.PointLocation;
 import Triangulation.Triangulation;
 import UI.DCELJPanel;
 
@@ -395,6 +396,49 @@ public class DCEL {
         SwingUtilities.invokeLater(() -> new DCELJPanel(zigZag));
         SwingUtilities.invokeLater(() -> new DCELJPanel(dcel));
         SwingUtilities.invokeLater(() -> new DCELJPanel(thirdPolygon));
+
+        ArrayList<Vertex> pointLocationVertices = new ArrayList<>();
+        pointLocationVertices.add(new Vertex(200, 100, "V0"));
+        pointLocationVertices.add(new Vertex(300, 150, "V1"));
+        pointLocationVertices.add(new Vertex(300, 300, "V2"));
+        pointLocationVertices.add(new Vertex(200, 400, "V3"));
+        pointLocationVertices.add(new Vertex(100, 350, "V4"));
+        pointLocationVertices.add(new Vertex(100, 200, "V5"));
+
+        DCEL pointLocationDcel = new DCEL();
+        pointLocationDcel.constructSimplePolygon(pointLocationVertices);
+
+        pointLocationDcel.addVertex(new Vertex(200, 250, "V6"));
+        pointLocationDcel.addEdge("V0", "V6");
+        pointLocationDcel.addEdge("V1", "V6");
+        pointLocationDcel.addEdge("V2", "V6");
+        pointLocationDcel.addEdge("V3", "V6");
+        pointLocationDcel.addEdge("V4", "V6");
+        pointLocationDcel.addEdge("V5", "V6");
+
+        SwingUtilities.invokeLater(() -> new DCELJPanel(pointLocationDcel));
+
+        PointLocation pointLocation = new PointLocation(pointLocationDcel);
+
+        pointLocation.Query(0, 0);
+        pointLocation.Query(0, 110);
+        pointLocation.Query(0, 160);
+        pointLocation.Query(0, 210);
+        pointLocation.Query(0, 260);
+        pointLocation.Query(0, 310);
+        pointLocation.Query(0, 360);
+        pointLocation.Query(0, 410);
+
+        System.out.println("---");
+
+        pointLocation.Query(0, 0);
+        pointLocation.Query(0, 100);
+        pointLocation.Query(0, 150);
+        pointLocation.Query(0, 200);
+        pointLocation.Query(0, 250);
+        pointLocation.Query(0, 300);
+        pointLocation.Query(0, 350);
+        pointLocation.Query(0, 400);
     }
 
     public final static class DuplicateVertexException extends RuntimeException {}

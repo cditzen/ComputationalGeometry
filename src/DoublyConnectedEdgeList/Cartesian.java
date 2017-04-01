@@ -8,4 +8,8 @@ public interface Cartesian {
     int getX();
 
     int getY();
+
+    int getEndPointX();
+
+    int getEndPointY();
 }
