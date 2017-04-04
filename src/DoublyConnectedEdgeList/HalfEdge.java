@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
  */
 public class HalfEdge implements Comparable<Cartesian>, Cartesian {
 
-    // For debugging
+    // Name of this Half Edge
     String name;
 
     // Vertex from which this edge comes from
@@ -109,13 +109,11 @@ public class HalfEdge implements Comparable<Cartesian>, Cartesian {
         Vertex endVertex = this.getTwin().getOrigin();
         if (endVertex.getX() - this.getX() == 0 || o instanceof HalfEdge) {
             int xDiff = (this.getX() + this.getEndPointX()) - (o.getX() + o.getEndPointX());
-
             if (xDiff == 0) {
                 return (this.getY() + this.getEndPointY()) - (o.getY() + o.getEndPointY());
             } else {
                 return xDiff;
             }
-
         }
         double slope = ((double) (endVertex.getY() - this.getY()) / (double) (endVertex.getX() - this.getX()));
         double b = this.getY() - (this.getX() * slope);

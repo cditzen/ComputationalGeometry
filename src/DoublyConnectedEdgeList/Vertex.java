@@ -13,7 +13,6 @@ public class Vertex implements Comparable<Vertex>, Cartesian {
     private final int y;
 
     // Incident HalfEdge
-    // TODO Initially set to null. Question: Can this change? Does it need to?
     // Set to the first edge that has this as its origin
     private HalfEdge incidentEdge;
 
@@ -97,7 +96,6 @@ class IncidentEdgeIterator implements Iterator<HalfEdge> {
             this.currentEdge = vertex.getIncidentEdge();
             hasVisitedStartingVertex = false;
         } else {
-            // TODO idk
             startingEdge = null;
             currentEdge = null;
             hasVisitedStartingVertex = false;

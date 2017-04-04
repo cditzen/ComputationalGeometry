@@ -43,7 +43,6 @@ public class Face {
     public FaceIterator getFaceIterator() {
         return new FaceIterator(this);
     }
-
 }
 
 class FaceIterator implements Iterator<Vertex> {
@@ -60,7 +59,7 @@ class FaceIterator implements Iterator<Vertex> {
 
     @Override
     public boolean hasNext() {
-        if (current == startingEdge && hasVisitedStart == true) {
+        if ((current == startingEdge && hasVisitedStart == true) || current == null) {
             return false;
         } else {
             return true;

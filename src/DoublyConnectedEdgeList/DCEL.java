@@ -22,12 +22,21 @@ public class DCEL {
 
 
     public DCEL() {
-        vertexMap = new HashMap<>();
-        edgeList = new ArrayList<>();
+        this.vertexMap = new HashMap<>();
+        this.edgeList = new ArrayList<>();
 
-        faces = new ArrayList<>();
-        outerFace = new Face("Outer Face");
-        faces.add(outerFace);
+        this.faces = new ArrayList<>();
+        this.outerFace = new Face("Outer Face");
+        this.faces.add(outerFace);
+    }
+
+    public DCEL(Face outerFace) {
+        this.vertexMap = new HashMap<>();
+        this.edgeList = new ArrayList<>();
+
+        this.faces = new ArrayList<>();
+        this.outerFace = outerFace;
+        this.faces.add(outerFace);
     }
 
     public ArrayList<Vertex> getVertices() {
@@ -65,8 +74,6 @@ public class DCEL {
         if (v1 == null || v2 == null) {
             throw new NoSuchVertexException();
         }
-
-        // TODO Check duplicate edges
 
         // Check if there is a path from v1 to v2.
         HalfEdge pathEdge = getAntiClockwisePathToVertex(v1, v2);
@@ -181,16 +188,16 @@ public class DCEL {
             int currentAngle = source.getAngleToVertex(current.getNext().getOrigin());
             int prevAngle = source.getAngleToVertex(prev.getNext().getOrigin());
 
-            if (Helpers.targetInRange(currentAngle, prevAngle, targetAngle)) {
+            if (prevAngle > targetAngle && targetAngle > currentAngle) {
                 return current;
-            } else {
+            } else if (currentAngle > prevAngle){
                 // Shift everything down by the lowest point, check and see if still bounded. I coded this at 2am :(
                 int difference = -180 - Math.min(currentAngle, prevAngle);
                 currentAngle = currentAngle + difference;
                 prevAngle = prevAngle + difference;
                 int tempTarget = targetAngle + difference;
                 if (currentAngle <= -180) {
-                    currentAngle += 380;
+                    currentAngle += 360;
                 }
                 if (prevAngle <= -180) {
                     prevAngle += 360;
@@ -198,7 +205,7 @@ public class DCEL {
                 if (tempTarget <= -180) {
                     tempTarget += 360;
                 }
-                if (Helpers.targetInRange(currentAngle, prevAngle, tempTarget)) {
+                if (prevAngle > tempTarget && tempTarget > currentAngle) {
                     return current;
                 }
             }
@@ -252,7 +259,8 @@ public class DCEL {
     }
 
     public void constructSimplePolygon(List<Vertex> listOfVertices) {
-        // TODO Check if not simple polygon
+
+        // Check if not simple polygon. (This isn't very accurate)
         if (listOfVertices.size() < 3) {
             throw new NotSimplePolygonException();
         }
@@ -295,28 +303,28 @@ public class DCEL {
         ArrayList<DCEL> subDivisions = new ArrayList<>();
 
         for (Face face : this.getFaces()) {
-            System.out.println("Face: " + face.getName());
             if (face != this.getOuterFace()) {
-                ArrayList<Vertex> verticesInFace = new ArrayList<>();
-                FaceIterator faceIterator = face.getFaceIterator();
-                while (faceIterator.hasNext()) {
-                    Vertex vertex = faceIterator.next();
-                    // Make duplicate Vertex
-                    Vertex copy = new Vertex(vertex.getX(), vertex.getY(), vertex.getName());
-                    verticesInFace.add(copy);
-                    System.out.println("\t\tVertex: " + vertex.getName());
-                }
-                DCEL subDivision = new DCEL();
-                subDivision.constructSimplePolygon(verticesInFace);
-                subDivisions.add(subDivision);
+                subDivisions.add(getSubdivision(face));
             }
         }
         return subDivisions;
     }
 
-    public static void main(String[] args) {
-        System.out.println("Creating DoublyConnectedEdgeList.DCEL");
+    public DCEL getSubdivision(Face face) {
+        ArrayList<Vertex> verticesInFace = new ArrayList<>();
+        FaceIterator faceIterator = face.getFaceIterator();
+        while (faceIterator.hasNext()) {
+            Vertex vertex = faceIterator.next();
+            // Make duplicate Vertex
+            Vertex copy = new Vertex(vertex.getX(), vertex.getY(), vertex.getName());
+            verticesInFace.add(copy);
+        }
+        DCEL subDivision = new DCEL();
+        subDivision.constructSimplePolygon(verticesInFace);
+        return subDivision;
+    }
 
+    public static void main(String[] args) {
 
         ArrayList<Vertex> zigZagVertices = new ArrayList<>();
         zigZagVertices.add(new Vertex(100, 150, "V0"));
@@ -393,52 +401,22 @@ public class DCEL {
             Triangulation.triangulateMonotonePolygon(subDivision, thirdPolygon);
         }
 
+        PointLocation zigZagPointLocation = new PointLocation(zigZag);
+        PointLocation dcelPointLocation = new PointLocation(dcel);
+        PointLocation thirdPointLocation = new PointLocation(dcel);
+
+        Vertex query = new Vertex(140, 210, "Query");
+        dcel.addVertex(query);
+
+        Face faceQuery = dcelPointLocation.Query(query.getX(), query.getY());
+        System.out.println(faceQuery.getName());
+        if (faceQuery != dcel.getOuterFace()) {
+            SwingUtilities.invokeLater(() -> new DCELJPanel(dcel.getSubdivision(faceQuery)));
+        }
+
         SwingUtilities.invokeLater(() -> new DCELJPanel(zigZag));
         SwingUtilities.invokeLater(() -> new DCELJPanel(dcel));
         SwingUtilities.invokeLater(() -> new DCELJPanel(thirdPolygon));
-
-        ArrayList<Vertex> pointLocationVertices = new ArrayList<>();
-        pointLocationVertices.add(new Vertex(200, 100, "V0"));
-        pointLocationVertices.add(new Vertex(300, 150, "V1"));
-        pointLocationVertices.add(new Vertex(300, 300, "V2"));
-        pointLocationVertices.add(new Vertex(200, 400, "V3"));
-        pointLocationVertices.add(new Vertex(100, 350, "V4"));
-        pointLocationVertices.add(new Vertex(100, 200, "V5"));
-
-        DCEL pointLocationDcel = new DCEL();
-        pointLocationDcel.constructSimplePolygon(pointLocationVertices);
-
-        pointLocationDcel.addVertex(new Vertex(200, 250, "V6"));
-        pointLocationDcel.addEdge("V0", "V6");
-        pointLocationDcel.addEdge("V1", "V6");
-        pointLocationDcel.addEdge("V2", "V6");
-        pointLocationDcel.addEdge("V3", "V6");
-        pointLocationDcel.addEdge("V4", "V6");
-        pointLocationDcel.addEdge("V5", "V6");
-
-        SwingUtilities.invokeLater(() -> new DCELJPanel(pointLocationDcel));
-
-        PointLocation pointLocation = new PointLocation(pointLocationDcel);
-
-        pointLocation.Query(0, 0);
-        pointLocation.Query(0, 110);
-        pointLocation.Query(0, 160);
-        pointLocation.Query(0, 210);
-        pointLocation.Query(0, 260);
-        pointLocation.Query(0, 310);
-        pointLocation.Query(0, 360);
-        pointLocation.Query(0, 410);
-
-        System.out.println("---");
-
-        pointLocation.Query(0, 0);
-        pointLocation.Query(0, 100);
-        pointLocation.Query(0, 150);
-        pointLocation.Query(0, 200);
-        pointLocation.Query(0, 250);
-        pointLocation.Query(0, 300);
-        pointLocation.Query(0, 350);
-        pointLocation.Query(0, 400);
     }
 
     public final static class DuplicateVertexException extends RuntimeException {}

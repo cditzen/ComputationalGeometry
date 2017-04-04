@@ -20,7 +20,7 @@ public class PointLocation {
     private final int POSITIVE_INFINITY = Integer.MAX_VALUE / 3;
 
     private ArrayList<Vertex> boundingVertices;
-    private HashMap<Vertex, Treap<HalfEdge>> sets;
+    private HashMap<Vertex, HalfEdgeTreap> sets;
 
     public PointLocation(DCEL dcel) {
         this.boundingVertices = new ArrayList<>();
@@ -32,24 +32,21 @@ public class PointLocation {
 
         // binary search on boundingVertices
         Vertex queryPoint = new Vertex(x, y, "queryPoint");
-        Vertex result = findBoundingVertex(queryPoint);
+        HalfEdge halfEdge = sets.get(findBoundingVertex(queryPoint)).findTargetOrSmaller(queryPoint);
 
-        System.out.println("Queue(): " + result.getName() + ", " + result.getY());
-
-
-        return null;
+        return halfEdge.getIncidentFace();
     }
 
     private void constructPointLocation(DCEL dcel) {
 
         ArrayList<Vertex> vertices = dcel.getVertices();
 
-        vertices.addAll(infinityBound().getVertices());
+        vertices.addAll(infinityBound(dcel.getOuterFace()).getVertices());
 
         Collections.sort(vertices, CartesianComparator.yAxisComparator().reversed());
 
         // Initialize the first treap
-        Treap<HalfEdge> treap = new Treap<HalfEdge>();
+        HalfEdgeTreap treap = new HalfEdgeTreap();
 
         // Insert edges into the treap
         Iterator<HalfEdge> iterator = vertices.get(0).getIncidentEdgeIterator();
@@ -69,7 +66,7 @@ public class PointLocation {
             if (currentVertex.getY() != lastYPosition) {
                 // Add new treap
 
-                treap = treap.makeCopy();
+                treap = (HalfEdgeTreap) treap.makeCopy();
 
                 handleVertexEvent(currentVertex, treap);
 
@@ -83,12 +80,6 @@ public class PointLocation {
                 handleVertexEvent(currentVertex, treap);
             }
         }
-
-        for (int i = 0; i < boundingVertices.size(); i++) {
-            System.out.println("i: " + i + " Y: "+ boundingVertices.get(i).getY());
-            sets.get(boundingVertices.get(i)).printTree();
-            System.out.println("---\n\n");
-        }
     }
 
     private void handleVertexEvent(Vertex vertex, Treap<HalfEdge> treap) {
@@ -98,7 +89,6 @@ public class PointLocation {
         while (iterator.hasNext()) {
             HalfEdge currentEdge = iterator.next();
 
-            // TODO Check if treap has edge
             if (treap.find(currentEdge.getTwin()) == null) {
                 // Does not have edge, add a new one
                 treap.insert(currentEdge);
@@ -109,8 +99,8 @@ public class PointLocation {
         }
     }
 
-    private DCEL infinityBound() {
-        DCEL infinity = new DCEL();
+    private DCEL infinityBound(Face outerFace) {
+        DCEL infinity = new DCEL(outerFace);
         infinity.addVertex(new Vertex(NEGATIVE_INFINITY, POSITIVE_INFINITY, "Positive Infinity %%%"));
         infinity.addVertex(new Vertex(NEGATIVE_INFINITY, NEGATIVE_INFINITY, "Negative Infinity %%%"));
         infinity.addEdge("Positive Infinity %%%", "Negative Infinity %%%");

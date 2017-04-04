@@ -15,7 +15,7 @@ public class Triangulation {
 
 
     public static DCEL makeMonotone(DCEL simplePolygon) {
-        Treap<HalfEdge> treap = new Treap();
+        HalfEdgeTreap treap = new HalfEdgeTreap();
 
         HashMap<HalfEdge, Vertex> helpers = new HashMap<>();
         Set<Vertex> mergeVertices = new HashSet<>();
@@ -43,7 +43,7 @@ public class Triangulation {
 
             if (Helpers.vertexAboveNeighbors(currentVertex, incidentVertex, prevVertex)) {
                 if (incidentVertexAngle > prevVertexAngle) {
-                    System.out.println("Vertex " + currentVertex.getName() + " is a Split Vertex");
+                    // Split Vertex
 
                     HalfEdge leftOfCurrent = (HalfEdge) treap.findTargetOrSmaller(currentVertex);
                     simplePolygon.addEdge(currentVertex.getName(), helpers.get(leftOfCurrent).getName());
@@ -52,7 +52,7 @@ public class Triangulation {
                     helpers.put(incidentInteriorEdge, currentVertex);
 
                 } else {
-                    System.out.println("Vertex " + currentVertex.getName() + " is a Start Vertex");
+                    // Start Vertex
 
                     treap.insert(incidentInteriorEdge);
                     helpers.put(incidentInteriorEdge, currentVertex);
@@ -60,7 +60,7 @@ public class Triangulation {
                 }
             } else if (Helpers.vertexBelowNeighbors(currentVertex, incidentVertex, prevVertex)){
                 if (incidentVertexAngle > prevVertexAngle) {
-                    System.out.println("Vertex" + currentVertex.getName() + " is a Merge Vertex");
+                    // Merge Vertex
 
                     if (mergeVertices.contains(helpers.get(prevEdge))) {
                         simplePolygon.addEdge(currentVertex.getName(), helpers.get(prevEdge).getName());
@@ -73,7 +73,7 @@ public class Triangulation {
                     helpers.put(leftOfCurrent, currentVertex);
                     mergeVertices.add(currentVertex);
                 } else {
-                    System.out.println("Vertex" + currentVertex.getName() + " is an End Vertex");
+                    // End Vertex
 
                     if (mergeVertices.contains(helpers.get(prevEdge))) {
                         simplePolygon.addEdge(currentVertex.getName(), helpers.get(prevEdge).getName());
@@ -81,7 +81,7 @@ public class Triangulation {
                     treap.remove(prevEdge);
                 }
             } else {
-                System.out.println("Vertex" + currentVertex.getName() + " is a Regular Vertex");
+                // Regular Vertex
 
                 if (interiorOnRightOfVertex(currentVertex, incidentInteriorEdge)) {
                     if (mergeVertices.contains(helpers.get(prevEdge))) {
@@ -139,7 +139,6 @@ public class Triangulation {
         }
 
         // Get vertices at the top of each chain
-        // TODO Need to check hasNext()
         Vertex leftVertex = leftChainIterator.next().getNext().getOrigin();
         Vertex rightVertex = rightChainIterator.next().getNext().getOrigin();
 
@@ -156,7 +155,6 @@ public class Triangulation {
         // Push next highest vertex onto the stack
         if (leftVertex.compareTo(rightVertex) > 0) {
             stack.push(leftVertex);
-            // TODO Need to check that another vertex is available
             leftVertex = leftChainIterator.next().getNext().getOrigin();
             lastChainDirection = Direction.LEFT;
         } else {
@@ -165,12 +163,10 @@ public class Triangulation {
             lastChainDirection = Direction.RIGHT;
         }
 
-        // TODO Check this statement. All nodes should be iterated through
         while (leftChainIterator.hasNext() || rightChainIterator.hasNext()) {
             Vertex current;
             Direction currentChainDirection;
 
-            // TODO Check this condition
             if (!rightChainIterator.hasNext() || (leftChainIterator.hasNext() && (leftVertex.getY() > rightVertex.getY() || (leftVertex.getY() == rightVertex.getY() && leftVertex.getX() < rightVertex.getX())))) {
                 // choose left chain
                 current = leftVertex;
