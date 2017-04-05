@@ -6,6 +6,10 @@ import Triangulation.Triangulation;
 import UI.DCELJPanel;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -315,7 +319,6 @@ public class DCEL {
         FaceIterator faceIterator = face.getFaceIterator();
         while (faceIterator.hasNext()) {
             Vertex vertex = faceIterator.next();
-            // Make duplicate Vertex
             Vertex copy = new Vertex(vertex.getX(), vertex.getY(), vertex.getName());
             verticesInFace.add(copy);
         }
@@ -324,99 +327,51 @@ public class DCEL {
         return subDivision;
     }
 
-    public static void main(String[] args) {
+    public static ArrayList<Vertex> loadVertices(String fileName) throws FileNotFoundException{
+        ArrayList<Vertex> vertices = new ArrayList<>();
 
-        ArrayList<Vertex> zigZagVertices = new ArrayList<>();
-        zigZagVertices.add(new Vertex(100, 150, "V0"));
-        zigZagVertices.add(new Vertex(150, 100, "V1"));
-        zigZagVertices.add(new Vertex(200, 200, "V2"));
-        zigZagVertices.add(new Vertex(250, 150, "V3"));
-        zigZagVertices.add(new Vertex(300, 250, "V4"));
-        zigZagVertices.add(new Vertex(400, 200, "V5"));
-        zigZagVertices.add(new Vertex(450, 300, "V6"));
-        zigZagVertices.add(new Vertex(400, 350, "V7"));
-        zigZagVertices.add(new Vertex(350, 300, "V8"));
-        zigZagVertices.add(new Vertex(300, 350, "V9"));
-        zigZagVertices.add(new Vertex(250, 250, "V10"));
-        zigZagVertices.add(new Vertex(200, 300, "V11"));
-        zigZagVertices.add(new Vertex(150, 200, "V12"));
-        zigZagVertices.add(new Vertex(100, 250, "V13"));
-
-        DCEL zigZag = new DCEL();
-        zigZag.constructSimplePolygon(zigZagVertices);
-
-        ArrayList<Vertex> list = new ArrayList<>();
-        list.add(new Vertex(230, 350, "V0"));
-        list.add(new Vertex(150, 290, "V1"));
-        list.add(new Vertex(220, 270, "V2"));
-        list.add(new Vertex(200, 220, "V3"));
-        list.add(new Vertex(100, 250, "V4"));
-        list.add(new Vertex(120, 120, "V5"));
-        list.add(new Vertex(260, 100, "V6"));
-        list.add(new Vertex(280, 230, "V7"));
-        list.add(new Vertex(310, 200, "V8"));
-        list.add(new Vertex(320, 270, "V9"));
-        list.add(new Vertex(300, 270, "V10"));
-        list.add(new Vertex(290, 350, "V11"));
-        list.add(new Vertex(240, 320, "V12"));
-
-        DCEL dcel = new DCEL();
-        dcel.constructSimplePolygon(list);
-
-        ArrayList<Vertex> yMonotoneVertices = new ArrayList<>();
-        yMonotoneVertices.add(new Vertex(300, 550, "V0"));
-        yMonotoneVertices.add(new Vertex(270, 484, "V1"));
-        yMonotoneVertices.add(new Vertex(225, 425, "V2"));
-        yMonotoneVertices.add(new Vertex(170, 380, "V3"));
-        yMonotoneVertices.add(new Vertex(100, 350, "V4"));
-        yMonotoneVertices.add(new Vertex(230, 200, "V5"));
-        yMonotoneVertices.add(new Vertex(170, 140, "V6"));
-        yMonotoneVertices.add(new Vertex(300, 90, "V7"));
-        yMonotoneVertices.add(new Vertex(380, 150, "V8"));
-        yMonotoneVertices.add(new Vertex(360, 180, "V9"));
-        yMonotoneVertices.add(new Vertex(440, 270, "V10"));
-        yMonotoneVertices.add(new Vertex(455, 245, "V11"));
-        yMonotoneVertices.add(new Vertex(475, 230, "V12"));
-        yMonotoneVertices.add(new Vertex(500, 300, "V13"));
-        yMonotoneVertices.add(new Vertex(270, 290, "V14"));
-        yMonotoneVertices.add(new Vertex(245, 320, "V15"));
-        yMonotoneVertices.add(new Vertex(320, 405, "V16"));
-
-        DCEL thirdPolygon = new DCEL();
-        thirdPolygon.constructSimplePolygon(yMonotoneVertices);
-
-        Triangulation.makeMonotone(zigZag);
-        Triangulation.makeMonotone(dcel);
-        Triangulation.makeMonotone(thirdPolygon);
-
-        for (DCEL subDivision : zigZag.getSubDivisions()) {
-            Triangulation.triangulateMonotonePolygon(subDivision, zigZag);
+        File vertexFile = new File(fileName);
+        Scanner scanner = new Scanner(vertexFile);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            Scanner lineScanner = new Scanner(line);
+            int x = Integer.valueOf(lineScanner.next());
+            int y = Integer.valueOf(lineScanner.next());
+            String name = lineScanner.next();
+            vertices.add(new Vertex(x, y, name));
         }
 
+        return vertices;
+    }
+
+    public static void main(String[] args) throws FileNotFoundException {
+
+        String polygonFileString = args[0];
+        DCEL dcel = new DCEL();
+        dcel.constructSimplePolygon(loadVertices(polygonFileString));
+
+        // Make the DCEL Y Monotone
+        Triangulation.makeMonotone(dcel);
+
+        // Triangulate the Subdivisions
         for (DCEL subDivision : dcel.getSubDivisions()) {
             Triangulation.triangulateMonotonePolygon(subDivision, dcel);
         }
 
-        for (DCEL subDivision : thirdPolygon.getSubDivisions()) {
-            Triangulation.triangulateMonotonePolygon(subDivision, thirdPolygon);
-        }
+        // Create a Point Location
+        PointLocation pointLocation = new PointLocation(dcel);
 
-        PointLocation zigZagPointLocation = new PointLocation(zigZag);
-        PointLocation dcelPointLocation = new PointLocation(dcel);
-        PointLocation thirdPointLocation = new PointLocation(dcel);
-
-        Vertex query = new Vertex(140, 210, "Query");
+        // Query at a point
+        Vertex query = new Vertex(240, 210, "Query");
         dcel.addVertex(query);
-
-        Face faceQuery = dcelPointLocation.Query(query.getX(), query.getY());
+        Face faceQuery = pointLocation.Query(query.getX(), query.getY());
         System.out.println(faceQuery.getName());
         if (faceQuery != dcel.getOuterFace()) {
             SwingUtilities.invokeLater(() -> new DCELJPanel(dcel.getSubdivision(faceQuery)));
         }
 
-        SwingUtilities.invokeLater(() -> new DCELJPanel(zigZag));
+        // Display on a UI
         SwingUtilities.invokeLater(() -> new DCELJPanel(dcel));
-        SwingUtilities.invokeLater(() -> new DCELJPanel(thirdPolygon));
     }
 
     public final static class DuplicateVertexException extends RuntimeException {}
