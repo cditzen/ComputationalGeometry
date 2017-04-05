@@ -13,6 +13,11 @@ import java.util.*;
  */
 public class Triangulation {
 
+    /**
+     * Returns the simple polygon divided into monotone polygons
+     * @param simplePolygon A Simple Polygon represented as a DCEL
+     * @return
+     */
     public static DCEL makeMonotone(DCEL simplePolygon) {
         HalfEdgeTreap treap = new HalfEdgeTreap();
 
@@ -105,10 +110,21 @@ public class Triangulation {
         return regularVertex.compareTo(incidentInternalEdge.getNext().getOrigin()) > 0;
     }
 
+    /**
+     * Triangulates a Monotone Polygon
+     * @param monotonePolygon Polygon to Triangulate
+     * @return Triangulated Polygon
+     */
     public static DCEL triangulateMonotonePolygon(DCEL monotonePolygon) {
         return triangulateMonotonePolygon(monotonePolygon, monotonePolygon);
     }
 
+    /**
+     * Triangulates a Monotone Polygon, edges are added to the source
+     * @param monotonePolygon sub division of source, polygon to perform the algorithm on
+     * @param source Original DCEL to add edges to
+     * @return Triangulated Polygon
+     */
     public static DCEL triangulateMonotonePolygon(DCEL monotonePolygon, DCEL source) {
 
         ArrayList<Vertex> vertices = monotonePolygon.getVertices();
