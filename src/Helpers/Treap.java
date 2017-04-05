@@ -2,6 +2,11 @@ package Helpers;
 
 import java.util.Random;
 
+/**
+ * Implementation of the Treap Data Structure
+ * Credit: http://users.cs.fiu.edu/~weiss/dsaajava/code/DataStructures/Treap.java
+ * @param <T>
+ */
 public class Treap <T extends Comparable<? super T>> {
 
     protected TreapNode root;
