@@ -13,7 +13,6 @@ import java.util.*;
  */
 public class Triangulation {
 
-
     public static DCEL makeMonotone(DCEL simplePolygon) {
         HalfEdgeTreap treap = new HalfEdgeTreap();
 
@@ -220,7 +219,4 @@ public class Triangulation {
     private static Direction getDirectionOfNextVertex(Vertex current, Vertex lastPopped, Vertex next) {
         return current.getAngleToVertex(lastPopped) < current.getAngleToVertex(next) ? Direction.LEFT : Direction.RIGHT;
     }
-
-
 }
-
