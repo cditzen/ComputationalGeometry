@@ -346,6 +346,7 @@ public class DCEL {
 
     public static void main(String[] args) throws FileNotFoundException {
 
+        // Create DCEL from input file
         String polygonFileString = args[0];
         DCEL dcel = new DCEL();
         dcel.constructSimplePolygon(loadVertices(polygonFileString));
