@@ -8,8 +8,6 @@ import UI.DCELJPanel;
 import javax.swing.*;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -24,7 +22,9 @@ public class DCEL {
     private ArrayList<Face> faces;
     private Face outerFace;
 
-
+    /**
+     * Default Constructor for a new DCEL
+     */
     public DCEL() {
         this.vertexMap = new HashMap<>();
         this.edgeList = new ArrayList<>();
@@ -34,6 +34,10 @@ public class DCEL {
         this.faces.add(outerFace);
     }
 
+    /**
+     * Constructor for a DCEL with a given outerFace
+     * @param outerFace outerFace to be set
+     */
     public DCEL(Face outerFace) {
         this.vertexMap = new HashMap<>();
         this.edgeList = new ArrayList<>();
@@ -43,6 +47,10 @@ public class DCEL {
         this.faces.add(outerFace);
     }
 
+    /**
+     * Returns a list of all Vertices in the DCEL
+     * @return vertices in the DCEL
+     */
     public ArrayList<Vertex> getVertices() {
         ArrayList<Vertex> vertices = new ArrayList<>();
         for (Map.Entry<String, Vertex> map : vertexMap.entrySet()) {
@@ -51,14 +59,27 @@ public class DCEL {
         return vertices;
     }
 
+    /**
+     * Returns the outerFace of the DCEL
+     * @return outerFace
+     */
     public Face getOuterFace() {
         return outerFace;
     }
 
+    /**
+     * Returns a list of all Faces in the DCEL
+     * @return list of faces
+     */
     public ArrayList<Face> getFaces() {
         return faces;
     }
 
+    /**
+     * Adds a Vertex to the DCEL
+     * @param vertexName Unique name of the Vertex
+     * @param vertex Vertex to add
+     */
     public void addVertex(String vertexName, Vertex vertex) {
         if (vertexMap.containsKey(vertexName)) {
             throw new DuplicateVertexException();
@@ -66,10 +87,19 @@ public class DCEL {
         vertexMap.put(vertexName, vertex);
     }
 
+    /**
+     * Adds a vertex to the DCEL
+     * @param vertex Vertex with a name
+     */
     public void addVertex(Vertex vertex) {
         addVertex(vertex.getName(), vertex);
     }
 
+    /**
+     * Adds an edge between two vertices
+     * @param vertex1 String name of the first vertex
+     * @param vertex2 String name of the second vertex
+     */
     public void addEdge(String vertex1, String vertex2) {
 
         // Get the two vertices to be added
@@ -262,6 +292,10 @@ public class DCEL {
         return null;
     }
 
+    /**
+     * Contructs a Simple Polygon by iterating through a list of Vertices, and then connecting the first and last Vertex
+     * @param listOfVertices list of Vertex ordered around the polygon to create
+     */
     public void constructSimplePolygon(List<Vertex> listOfVertices) {
 
         // Check if not simple polygon. (This isn't very accurate)
@@ -280,29 +314,10 @@ public class DCEL {
         addEdge(listOfVertices.get(listOfVertices.size() - 1).getName(), listOfVertices.get(0).getName());
     }
 
-    public void printDebug() {
-        System.out.println("\tGetting vertices");
-        System.out.println("Vertex\t\tEdges\t\tTwin\t\tNext\t\tPrev\t\tFace");
-        System.out.println("--------------------");
-        Iterator vertexIterator = vertexMap.keySet().iterator();
-        while (vertexIterator.hasNext()) {
-            Vertex vertex = vertexMap.get(vertexIterator.next());
-            System.out.println(vertex.getName() + "\t\t\t");
-
-            Iterator<HalfEdge> edgeIterator = vertex.getIncidentEdgeIterator();
-
-            while (edgeIterator.hasNext()) {
-                HalfEdge current = edgeIterator.next();
-
-                System.out.println("\t\t\t" + current.getName() +
-                        "\t\t" + current.getTwin().getName() +
-                        "\t\t" + current.getNext().getName() +
-                        "\t\t" + current.getPrev().getName() +
-                        "\t\t" + current.getIncidentFace().getName());
-            }
-        }
-    }
-
+    /**
+     * Returns a list of all sub divisions of the DCEL
+     * @return list of sub divisions in the DCEL
+     */
     public ArrayList<DCEL> getSubDivisions() {
         ArrayList<DCEL> subDivisions = new ArrayList<>();
 
@@ -314,7 +329,12 @@ public class DCEL {
         return subDivisions;
     }
 
-    public DCEL getSubdivision(Face face) {
+    /**
+     * Returns a DCEL representing a subdivision containing a single face
+     * @param face face of the sub division
+     * @return DCEL containing the Face
+     */
+    public static DCEL getSubdivision(Face face) {
         ArrayList<Vertex> verticesInFace = new ArrayList<>();
         FaceIterator faceIterator = face.getFaceIterator();
         while (faceIterator.hasNext()) {
@@ -327,6 +347,12 @@ public class DCEL {
         return subDivision;
     }
 
+    /**
+     * Loads a vertex file and returns a list of Vertices
+     * @param fileName String of the vertex file
+     * @return List of Vertices
+     * @throws FileNotFoundException
+     */
     public static ArrayList<Vertex> loadVertices(String fileName) throws FileNotFoundException{
         ArrayList<Vertex> vertices = new ArrayList<>();
 
@@ -368,11 +394,11 @@ public class DCEL {
         Face faceQuery = pointLocation.Query(query.getX(), query.getY());
         System.out.println(faceQuery.getName());
         if (faceQuery != dcel.getOuterFace()) {
-            SwingUtilities.invokeLater(() -> new DCELJPanel(dcel.getSubdivision(faceQuery)));
+            new DCELJPanel(dcel.getSubdivision(faceQuery));
         }
 
         // Display on a UI
-        SwingUtilities.invokeLater(() -> new DCELJPanel(dcel));
+        new DCELJPanel(dcel);
     }
 
     public final static class DuplicateVertexException extends RuntimeException {}
