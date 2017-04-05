@@ -22,7 +22,7 @@ public class DCELJPanel {
 
     public DCELJPanel(DCEL dcel) {
         this.dcel = dcel;
-        initComponents();
+        SwingUtilities.invokeLater(() -> initComponents());
     }
 
     private void initComponents() {
